@@ -11,9 +11,9 @@ namespace ElectorDal
     public class Street
     {
         public int id { get; set; }
-        public string ShortName { get; set; }
         public string FullName { get; set; }
 
+        [ForeignKey("idCity")]
         public virtual City City { get; set; }
 
         public int idCity { get; set; }
@@ -22,8 +22,7 @@ namespace ElectorDal
 
         public Street(string shortName, string marker)
         {
-            ShortName = shortName;
-            FullName = string.Format("{0}, {1}", shortName, marker);
+            FullName = string.Format("{0} {1}", shortName, marker);
         }
 
     }

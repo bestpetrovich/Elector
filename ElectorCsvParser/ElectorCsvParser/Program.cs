@@ -30,7 +30,6 @@ namespace ElectorCsvParser
                 {
                     var dbStreet = context.Streets.FirstOrDefault(s =>
                                             s.idCity == dbCity.id &&
-                                            s.ShortName == item.ShortName &&
                                             s.FullName == item.FullName);
 
                     if (dbStreet != null)

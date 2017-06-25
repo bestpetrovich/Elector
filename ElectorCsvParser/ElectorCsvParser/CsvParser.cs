@@ -10,10 +10,31 @@ namespace ElectorCsvParser
     internal class CsvParser
     {
         private string[] csvFileData;
+        private char[] digits = new[] { '0', '1', '2', '3', '4','5', '6', '7', '8', '9' };
+        
 
         public CsvParser(string csvFileName)
         {
-            csvFileData = File.ReadAllLines(csvFileName, Encoding.UTF8);
+            var text = File.ReadAllText(csvFileName, Encoding.UTF8);
+            text = ClearLfChar(text);
+            csvFileData = text.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        private string ClearLfChar(string text)
+        {
+            var outText = new StringBuilder();
+
+            char prevChar = '\a';
+            foreach (char c in text)
+            {
+                if (c == '\n' && prevChar != '\r')
+                    continue;
+
+                outText.Append(c);
+                prevChar = c;
+            }
+
+            return outText.ToString();
         }
 
         internal Street[] GetStreets(string city)
@@ -28,7 +49,10 @@ namespace ElectorCsvParser
 
                 var street = ParseStreet(city, items[4]);
                 if (street != null)
-                    streets.Add(street);
+                {
+                    if(streets.FirstOrDefault(s=> s.FullName == street.FullName) == null)
+                        streets.Add(street);
+                }
             }
 
             return streets.ToArray();
@@ -36,7 +60,7 @@ namespace ElectorCsvParser
 
         private Street ParseStreet(string city, string str)
         {
-            char[] trimChars = new[] { ' ', ',' };
+            char[] trimChars = new[] { ' ', ',', '.' };
             string[] markers = CreateStreetMarkers();
 
             var cityPos = str.IndexOf(city);
@@ -51,11 +75,30 @@ namespace ElectorCsvParser
                 if (markerPos < 0)
                     continue;
 
-                var shortName = addrStr.Substring(0, markerPos).Trim(trimChars);
-                return new Street(shortName, marker);
+                string shortName = string.Empty;
+                if (markerPos == 0)
+                {
+                    var houseMarkers = CreateHouseMarkers();
+                    foreach (var house in houseMarkers)
+                    {
+                        var houseIndex = addrStr.IndexOf(house);
+                        if (houseIndex < 0)
+                            continue;
+
+                        shortName = addrStr.Substring(markerPos + marker.Length, houseIndex - marker.Length).Trim(trimChars);
+                        return new Street(shortName, marker);
+                    }
+
+                    throw new Exception(string.Format("Не найден маркер дома. Строка: {0}", addrStr));
+                }
+                else
+                {
+                    shortName = addrStr.Substring(0, markerPos).Trim(trimChars);
+                    return new Street(shortName, marker);
+                }
             }
 
-            char[] digits = new[] { '0', '1', '2', '3', '4','5', '6', '7', '8', '9' };
+            
             var digitPos = addrStr.IndexOfAny(digits);
             if(digitPos > 0)
             {
@@ -73,12 +116,30 @@ namespace ElectorCsvParser
             markers.Add("просп.");
             markers.Add("ул.");
             markers.Add("бульв.");
+            markers.Add("бульвар");
             markers.Add("пер.");
+
 
             var outMarkers = new List<string>();
             foreach (var marker in markers)
             {
                 outMarkers.Add( marker.ToUpper());                
+            }
+
+            return outMarkers.ToArray();
+        }
+
+        private string[] CreateHouseMarkers()
+        {
+            var markers = new List<string>();
+
+            markers.Add("д.");
+            markers.Add("дом");
+
+            var outMarkers = new List<string>();
+            foreach (var marker in markers)
+            {
+                outMarkers.Add(marker.ToUpper());
             }
 
             return outMarkers.ToArray();
