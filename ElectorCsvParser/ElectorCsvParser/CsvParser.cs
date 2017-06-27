@@ -12,8 +12,7 @@ namespace ElectorCsvParser
         private string[] csvFileData;
         private char[] digits = new[] { '0', '1', '2', '3', '4','5', '6', '7', '8', '9' };
         private char[] trimChars = new[] { ' ', ',', '.' };
-        private List<Street> streets = new List<Street>();
-        private Dictionary<Street, List<House>> houses = new Dictionary<Street, List<House>>();
+        private Dictionary<Street, List<House>> _houses = new Dictionary<Street, List<House>>();
 
         public CsvParser(string csvFileName)
         {
@@ -24,7 +23,7 @@ namespace ElectorCsvParser
 
         internal Street[] GetStreets()
         {
-            return streets.ToArray();
+            return _houses.Keys.ToArray();
         }
 
         private string ClearLfChar(string text)
@@ -61,13 +60,30 @@ namespace ElectorCsvParser
                 var street = ParseStreet(addrStr);
                 if (street == null)
                     continue;
-                
-                if (streets.FirstOrDefault(s => s.FullName == street.FullName) == null)
-                    streets.Add(street);
 
-                var house = ParseHouse(addrStr);
-                house.Street = street;
+                var houses = AddOrUpdateStreet(street);
+                var house = ParseHouse(addrStr, street);
+                if (!houses.Any(h => h.Number == house.Number && h.SubNumber == house.SubNumber))
+                    houses.Add(house);
+                
             }            
+        }
+
+        private List<House> AddOrUpdateStreet(Street street)
+        {
+            List<House> items;
+            var streetKey = _houses.Keys.FirstOrDefault(s => s.FullName == street.FullName);
+            if (streetKey == null)
+            {
+                items = new List<House>();
+                _houses.Add(street, items);
+            }
+            else
+            {
+                items = _houses[streetKey];
+            }
+
+            return items;
         }
 
         private string GetAddrString(string city, string str)
@@ -120,7 +136,7 @@ namespace ElectorCsvParser
             throw new Exception(string.Format("Не найден маркер адреса строка:{0}", addrStr));           
         }
 
-        private House ParseHouse(string addrStr)
+        private House ParseHouse(string addrStr, Street street)
         {
             var house = new House();
             var houseMarkers = CreateHouseMarkers();
@@ -132,7 +148,7 @@ namespace ElectorCsvParser
 
                 house.Number = TextParser.GetNextWord(addrStr, houseIndex, marker);
             }
-
+            house.Street = street;
             return house;
         }
 

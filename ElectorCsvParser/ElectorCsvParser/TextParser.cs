@@ -9,9 +9,7 @@ namespace ElectorCsvParser
         internal static string GetNextWord(string str, int markerIndex, string marker)
         {
             var text = str.Substring(markerIndex+marker.Length);
-
             var words = GetWords(text);
-
             return words[0];
         }
 
