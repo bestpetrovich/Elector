@@ -12,7 +12,7 @@ namespace ElectorCsvParser
         private string[] csvFileData;
         private char[] digits = new[] { '0', '1', '2', '3', '4','5', '6', '7', '8', '9' };
         private char[] trimChars = new[] { ' ', ',', '.' };
-        private Dictionary<Street, List<House>> _houses = new Dictionary<Street, List<House>>();
+        private Dictionary<Street, List<House>> _houses = new Dictionary<Street, List<House>>();        
 
         public CsvParser(string csvFileName)
         {
@@ -68,8 +68,17 @@ namespace ElectorCsvParser
 
                 var houses = AddOrUpdateStreet(street);
                 var house = ParseHouse(addrStr);
-                if (house !=null && !houses.Any(h => h.Number == house.Number && h.SubNumber == house.SubNumber))
-                    houses.Add(house);                
+                if (house == null)
+                    continue;
+
+                if (!houses.Any(h => h.Number == house.Number && h.SubNumber == house.SubNumber))
+                    houses.Add(house);
+
+                var flat = ParseFlat(addrStr);
+                if (flat == null)
+                    continue;
+
+                house.AddFlat(flat);
             }            
         }
 
@@ -151,6 +160,7 @@ namespace ElectorCsvParser
                     continue;
 
                 house.Number = TextParser.GetNextWord(addrStr, index, marker);
+                break;
             }
 
             if (string.IsNullOrEmpty(house.Number))
@@ -171,9 +181,31 @@ namespace ElectorCsvParser
                     continue;
 
                 house.SubNumber = TextParser.GetNextWord(addrStr, index, marker);
+                break;
             }
 
             return house;
+        }
+
+        private Flat ParseFlat(string addrStr)
+        {
+            var flat = new Flat();
+            var flatMarkers = CreateFlatMarkers();
+            foreach (var marker in flatMarkers) //Пробуем поиск по маркеру дома
+            {
+                var index = addrStr.IndexOf(marker);
+                if (index < 0)
+                    continue;
+                
+                var textNumber = TextParser.GetNextWord(addrStr, index, marker);
+                if (int.TryParse(textNumber, out int number))
+                    flat.Number = number;
+            }
+
+            if (flat.Number == 0)
+                return null;
+
+            return flat;
         }
 
         private string[] CreateStreetMarkers()
@@ -216,6 +248,20 @@ namespace ElectorCsvParser
             markers.Add("корп.");
             markers.Add("корпус");
             markers.Add("к.");
+
+            var outMarkers = new List<string>();
+            foreach (var marker in markers)
+                outMarkers.Add(marker.ToUpper());
+
+            return outMarkers.ToArray();
+        }
+
+        private string[] CreateFlatMarkers()
+        {
+            var markers = new List<string>();
+
+            markers.Add("кв.");
+            markers.Add("квартира");
 
             var outMarkers = new List<string>();
             foreach (var marker in markers)

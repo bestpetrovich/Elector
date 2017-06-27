@@ -10,5 +10,6 @@ namespace ElectorDal
         public virtual DbSet<City> Citys { get; set; }
         public virtual DbSet<Street> Streets { get; set; }
         public virtual DbSet<House> Houses { get; set; }
+        public virtual DbSet<Flat> Flats { get; set; }
     }
 }

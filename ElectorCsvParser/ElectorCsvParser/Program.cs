@@ -74,10 +74,35 @@ namespace ElectorCsvParser
                         {
                             house.idStreet = idStreet;
                             context.Houses.Add(house);
-                        }
-                    }
+                            context.SaveChanges();
 
-                    context.SaveChanges();
+                            UpdateFlats(house);
+                        }
+                        else
+                            UpdateFlats(dbHouse);                        
+                    }
+                }
+            }
+        }
+
+        private static void UpdateFlats(House house)
+        {
+            using (var context = new ElectorContext())
+            {
+                var flats = house.GetFlats();
+                foreach(var flat in flats)
+                {
+                    var dbFlat = context.Flats.FirstOrDefault(f =>
+                                    f.idHouse == house.id &&
+                                    f.Number == flat.Number
+                    );
+
+                    if(dbFlat == null)
+                    {
+                        flat.idHouse = house.id;
+                        context.Flats.Add(flat);
+                        context.SaveChanges();
+                    }
                 }
             }
         }
