@@ -11,7 +11,7 @@ namespace ElectorCsvParser
     {
         private string[] csvFileData;
         private char[] digits = new[] { '0', '1', '2', '3', '4','5', '6', '7', '8', '9' };
-        
+        private List<Street> streets = new List<Street>();
 
         public CsvParser(string csvFileName)
         {
@@ -37,9 +37,9 @@ namespace ElectorCsvParser
             return outText.ToString();
         }
 
-        internal Street[] GetStreets(string city)
+        internal void Go(string city)
         {
-            var streets= new List<Street>();
+            
             foreach (var str in csvFileData)
             {
                 var items = str.Split(';');
@@ -50,11 +50,16 @@ namespace ElectorCsvParser
                 var street = ParseStreet(city, items[4]);
                 if (street != null)
                 {
-                    if(streets.FirstOrDefault(s=> s.FullName == street.FullName) == null)
+                    if (streets.FirstOrDefault(s => s.FullName == street.FullName) == null)
                         streets.Add(street);
                 }
             }
 
+            
+        }
+
+        internal Street[] GetStreets()
+        {
             return streets.ToArray();
         }
 

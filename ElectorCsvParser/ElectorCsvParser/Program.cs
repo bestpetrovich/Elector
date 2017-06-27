@@ -15,8 +15,8 @@ namespace ElectorCsvParser
             string city = "Москва";
 
             var parser = new CsvParser(csvFileName);
-
-            var streets = parser.GetStreets(city);
+            parser.Go(city);
+            var streets = parser.GetStreets();
 
             UpdateStreets(city, streets);
         }
