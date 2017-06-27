@@ -24,6 +24,5 @@ namespace ElectorDal
         {
             FullName = string.Format("{0} {1}", shortName, marker);
         }
-
     }
 }
