@@ -26,6 +26,11 @@ namespace ElectorCsvParser
             return _houses.Keys.ToArray();
         }
 
+        internal Dictionary<Street, List<House>> GetStreetHouses()
+        {
+            return _houses;
+        }
+
         private string ClearLfChar(string text)
         {
             var outText = new StringBuilder();
@@ -62,10 +67,9 @@ namespace ElectorCsvParser
                     continue;
 
                 var houses = AddOrUpdateStreet(street);
-                var house = ParseHouse(addrStr, street);
-                if (!houses.Any(h => h.Number == house.Number && h.SubNumber == house.SubNumber))
-                    houses.Add(house);
-                
+                var house = ParseHouse(addrStr);
+                if (house !=null && !houses.Any(h => h.Number == house.Number && h.SubNumber == house.SubNumber))
+                    houses.Add(house);                
             }            
         }
 
@@ -136,19 +140,39 @@ namespace ElectorCsvParser
             throw new Exception(string.Format("Не найден маркер адреса строка:{0}", addrStr));           
         }
 
-        private House ParseHouse(string addrStr, Street street)
+        private House ParseHouse(string addrStr)
         {
             var house = new House();
             var houseMarkers = CreateHouseMarkers();
             foreach (var marker in houseMarkers) //Пробуем поиск по маркеру дома
             {
-                var houseIndex = addrStr.IndexOf(marker);
-                if (houseIndex < 0)
+                var index = addrStr.IndexOf(marker);
+                if (index < 0)
                     continue;
 
-                house.Number = TextParser.GetNextWord(addrStr, houseIndex, marker);
+                house.Number = TextParser.GetNextWord(addrStr, index, marker);
             }
-            house.Street = street;
+
+            if (string.IsNullOrEmpty(house.Number))
+            {
+                var digitPos = addrStr.IndexOfAny(digits);
+                if (digitPos > 0)
+                    house.Number = TextParser.GetNextWord(addrStr, digitPos, "");
+            }
+
+            if (string.IsNullOrEmpty(house.Number))
+                return null;
+
+            var subHouseMarkers = CreateSubHouseMarkers();
+            foreach (var marker in subHouseMarkers) //Пробуем поиск по маркеру корпуса
+            {
+                var index = addrStr.IndexOf(marker);
+                if (index < 0)
+                    continue;
+
+                house.SubNumber = TextParser.GetNextWord(addrStr, index, marker);
+            }
+
             return house;
         }
 
@@ -176,10 +200,26 @@ namespace ElectorCsvParser
 
             markers.Add("д.");
             markers.Add("дом");
+            markers.Add("КВАРТ.");
 
             var outMarkers = new List<string>();
             foreach (var marker in markers)            
                 outMarkers.Add(marker.ToUpper());            
+
+            return outMarkers.ToArray();
+        }
+
+        private string[] CreateSubHouseMarkers()
+        {
+            var markers = new List<string>();
+
+            markers.Add("корп.");
+            markers.Add("корпус");
+            markers.Add("к.");
+
+            var outMarkers = new List<string>();
+            foreach (var marker in markers)
+                outMarkers.Add(marker.ToUpper());
 
             return outMarkers.ToArray();
         }

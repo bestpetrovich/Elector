@@ -9,7 +9,7 @@ namespace ElectorDal
         public string Number { get; set; }
         public string SubNumber { get; set; }
 
-        public int idCity { get; set; }
+        public int idStreet { get; set; }
 
         [ForeignKey("idStreet")]
         public virtual Street Street { get; set; }
