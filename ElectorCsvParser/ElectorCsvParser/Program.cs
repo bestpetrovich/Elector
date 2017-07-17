@@ -24,9 +24,13 @@ namespace ElectorCsvParser
         {
             using (var context = new ElectorContext())
             {
-                foreach(var problem in problems)
+                int total = problems.Count;
+                int cntr = 0;
+                foreach (var problem in problems)
                 {
-                    if(problem.Street != null)
+                    Console.WriteLine("Processinng problem {0} from {1}", cntr++, total);
+
+                    if (problem.Street != null)
                     {
                         problem.idStreet = AddOrUpdateStreet(city, problem.Street, context);
                         if (problem.House != null)

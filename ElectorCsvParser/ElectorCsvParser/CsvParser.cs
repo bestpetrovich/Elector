@@ -107,10 +107,15 @@ namespace ElectorCsvParser
             if (string.IsNullOrEmpty(content) || items.Length < 2)
                 return null;
 
+            var fio = items[0];
+            var dig = fio.IndexOfAny(digits);
+            if (dig > 0)
+                fio = fio.Substring(0, dig).Trim();
+
             var problem = new Problem()
             {
                 Text = content,
-                FIO = items[0]
+                FIO = fio
             };
 
             return problem;
