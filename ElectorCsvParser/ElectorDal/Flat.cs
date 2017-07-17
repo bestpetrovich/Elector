@@ -11,9 +11,8 @@ namespace ElectorDal
         public int? Entrance { get; set; }
         public int? Floor { get; set; }
 
-        public int idHouse { get; set; }
-
         [ForeignKey("idHouse")]
         public virtual House House { get; set; }
+        public int idHouse { get; set; }
     }
 }

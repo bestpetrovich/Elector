@@ -12,7 +12,8 @@ namespace ElectorCsvParser
         private string[] csvFileData;
         private char[] digits = new[] { '0', '1', '2', '3', '4','5', '6', '7', '8', '9' };
         private char[] trimChars = new[] { ' ', ',', '.' };
-        private Dictionary<Street, List<House>> _houses = new Dictionary<Street, List<House>>();        
+        private Dictionary<Street, List<House>> _houses = new Dictionary<Street, List<House>>();
+        private List<Problem> _problems = new List<Problem>();
 
         public CsvParser(string csvFileName)
         {
@@ -58,6 +59,12 @@ namespace ElectorCsvParser
                 if (items.Length < 5)
                     continue;
 
+                var problem = GetProblem(items[3], items[4]);
+                if (problem == null)
+                    continue;
+
+                _problems.Add(problem);
+
                 var addrStr = GetAddrString(city, items[4]);
                 if (string.IsNullOrEmpty(addrStr))
                     continue;
@@ -66,10 +73,14 @@ namespace ElectorCsvParser
                 if (street == null)
                     continue;
 
+                problem.Street = street;
+
                 var houses = AddOrUpdateStreet(street);
                 var house = ParseHouse(addrStr);
                 if (house == null)
                     continue;
+
+                problem.House = house;
 
                 if (!houses.Any(h => h.Number == house.Number && h.SubNumber == house.SubNumber))
                     houses.Add(house);
@@ -78,8 +89,26 @@ namespace ElectorCsvParser
                 if (flat == null)
                     continue;
 
-                house.AddFlat(flat);
+                problem.Flat = flat;
+
+                house.AddFlat(flat);                
             }            
+        }
+
+        private Problem GetProblem(string content, string addr)
+        {
+            var items = addr.ToUpper().Split(',');
+
+            if (string.IsNullOrEmpty(content) || items.Length < 2)
+                return null;
+
+            var problem = new Problem()
+            {
+                Content = content,
+                FIO = items[0]
+            };
+
+            return problem;
         }
 
         private List<House> AddOrUpdateStreet(Street street)
