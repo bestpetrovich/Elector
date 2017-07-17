@@ -6,7 +6,7 @@ namespace ElectorDal
     public class Problem
     {
         public int id { get; set; }
-        public string Content { get; set; }
+        public string Text { get; set; }
         public string FIO { get; set; }
             
         [ForeignKey("idStreet")]

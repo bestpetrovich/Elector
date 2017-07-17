@@ -16,95 +16,107 @@ namespace ElectorCsvParser
 
             var parser = new CsvParser(csvFileName);
             parser.Go(city);
-            var streets = parser.GetStreets();
 
-            UpdateStreets(city, streets);
-
-            var streetHouses = parser.GetStreetHouses();
-            UpdateStreetHouses(city, streetHouses);
+            UpdateProblems(city, parser.GetProblems());
         }
-
-        private static void UpdateStreets(string city, Street[] streets)
+      
+        private static void UpdateProblems(string city, IReadOnlyList<Problem> problems)
         {
             using (var context = new ElectorContext())
             {
-                var dbCity = context.Citys.FirstOrDefault(c => c.Name == city);
-                foreach(var item in streets)
+                foreach(var problem in problems)
                 {
-                    var dbStreet = context.Streets.FirstOrDefault(s =>
-                                            s.idCity == dbCity.id &&
-                                            s.FullName == item.FullName);
-
-                    if (dbStreet != null)
-                        continue;
-
-                    item.idCity = dbCity.id;
-                    context.Streets.Add(item);
-                }
-
-                context.SaveChanges();
-            }
-        }
-
-        private static void UpdateStreetHouses(string city, Dictionary<Street, List<House>> streetHouses)
-        {
-            using (var context = new ElectorContext())
-            {
-                var dbCity = context.Citys.FirstOrDefault(c => c.Name == city);
-                foreach(var street in streetHouses)
-                {
-                    var dbStreet = context.Streets.FirstOrDefault(s =>
-                                            s.idCity == dbCity.id &&
-                                            s.FullName == street.Key.FullName);
-
-                    if (dbStreet == null)
-                        throw new Exception("Street not found in DB");
-
-                    var idStreet = dbStreet.id;
-
-                    foreach(var house in street.Value)
+                    if(problem.Street != null)
                     {
-                        var dbHouse = context.Houses.FirstOrDefault(h =>
-                                        h.idStreet == idStreet &&
-                                        h.Number == house.Number &&
-                                        h.SubNumber == house.SubNumber
-                        );
-
-                        if (dbHouse == null)
+                        problem.idStreet = AddOrUpdateStreet(city, problem.Street, context);
+                        if (problem.House != null)
                         {
-                            house.idStreet = idStreet;
-                            context.Houses.Add(house);
-                            context.SaveChanges();
+                            problem.idHouse = AddOrUpdateHouse(problem.idStreet.Value, problem.House, context);
 
-                            UpdateFlats(house);
+                            if (problem.Flat != null)
+                            {
+                                problem.idFlat = AddOrUpdateFlat(problem.idHouse.Value, problem.Flat, context);
+                            }
                         }
-                        else
-                            UpdateFlats(dbHouse);                        
                     }
-                }
-            }
-        }
 
-        private static void UpdateFlats(House house)
-        {
-            using (var context = new ElectorContext())
-            {
-                var flats = house.GetFlats();
-                foreach(var flat in flats)
-                {
-                    var dbFlat = context.Flats.FirstOrDefault(f =>
-                                    f.idHouse == house.id &&
-                                    f.Number == flat.Number
-                    );
+                    var dbProblem = context.Problems.FirstOrDefault(p => p.idStreet == problem.idStreet &&
+                                                                    p.idHouse == problem.idHouse && p.idFlat == problem.idFlat &&
+                                                                    p.Text == problem.Text && p.FIO == problem.FIO);
 
-                    if(dbFlat == null)
+                    if (dbProblem == null)
                     {
-                        flat.idHouse = house.id;
-                        context.Flats.Add(flat);
+                        context.Problems.Add(new Problem()
+                        {
+                            Text = problem.Text,
+                            FIO = problem.FIO,
+                            idStreet = problem.idStreet,
+                            idHouse = problem.idHouse,
+                            idFlat = problem.idFlat
+                        });
                         context.SaveChanges();
                     }
                 }
             }
         }
+
+        private static int? AddOrUpdateStreet(string city, Street street, ElectorContext context)
+        {
+            var dbCity = context.Citys.FirstOrDefault(c => c.Name == city);
+            if (dbCity == null)
+            {
+                dbCity = new City() { Name = city };
+                context.Citys.Add(dbCity);
+                context.SaveChanges();
+            }
+
+
+            var dbStreet = context.Streets.FirstOrDefault(s =>
+                                    s.idCity == dbCity.id &&
+                                    s.FullName == street.FullName);
+
+            if (dbStreet != null)
+                return dbStreet.id;
+
+            street.idCity = dbCity.id;
+            context.Streets.Add(street);
+            context.SaveChanges();
+
+            return street.id;
+        }
+
+        private static int? AddOrUpdateHouse(int idStreet, House house, ElectorContext context)
+        {
+            var dbHouse = context.Houses.FirstOrDefault(h =>
+                            h.idStreet == idStreet &&
+                            h.Number == house.Number &&
+                            h.SubNumber == house.SubNumber
+            );
+
+            if (dbHouse != null)                    
+                return dbHouse.id;
+                   
+            house.idStreet = idStreet;
+            context.Houses.Add(house);
+            context.SaveChanges();
+            return house.id;                    
+        }
+
+        private static int? AddOrUpdateFlat(int idHouse, Flat flat, ElectorContext context)
+        {
+            var dbFlat = context.Flats.FirstOrDefault(f =>
+                            f.idHouse == idHouse &&
+                            f.Number == flat.Number
+            );
+
+            if (dbFlat != null)
+                return dbFlat.id;
+
+            flat.idHouse = idHouse;
+            context.Flats.Add(flat);
+            context.SaveChanges();
+            return flat.id;
+        }
+
     }
 }

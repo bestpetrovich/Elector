@@ -22,6 +22,11 @@ namespace ElectorCsvParser
             csvFileData = text.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
         }
 
+        internal IReadOnlyList<Problem> GetProblems()
+        {
+            return _problems.AsReadOnly();
+        }
+
         internal Street[] GetStreets()
         {
             return _houses.Keys.ToArray();
@@ -104,7 +109,7 @@ namespace ElectorCsvParser
 
             var problem = new Problem()
             {
-                Content = content,
+                Text = content,
                 FIO = items[0]
             };
 
