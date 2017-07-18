@@ -59,8 +59,49 @@ namespace ElectorCsvParser
         private List<House> GetHouses(string str)
         {
             string[] houseGroups = SplitToHouseGroups(str);
+            var houses = new List<House>();
+            foreach (var houseStr in houseGroups)
+            {
+                houses.AddRange(ParseHouses(houseStr));
+            }
 
-            return new List<House>();
+            return houses;
+        }
+
+        private IEnumerable<House> ParseHouses(string houseStr)
+        {
+            var leftBracket = houseStr.IndexOf('(');
+            var rightBracket = houseStr.IndexOf(')');
+
+            if (leftBracket < 0)
+                return new List<House>() { CsvParser.ParseHouse(houseStr) };
+
+            var number = houseStr.Substring(0, leftBracket).Trim();
+
+            var subNumberStr = houseStr.Substring(leftBracket + 1, rightBracket - leftBracket-1);
+            var items = subNumberStr.Split(',');
+            var houses = new List<House>();
+            var markers = Markers.CreateSubHouseMarkers();
+            foreach (var str in items)
+            {
+                var subNumber = str.ToUpper().Trim();
+                foreach (var marker in markers)
+                {
+                    var markerPos = subNumber.IndexOf(marker);
+                    if (markerPos < 0)
+                        continue;
+
+                    subNumber = subNumber.Substring(markerPos + marker.Length).Trim();
+                }
+
+                houses.Add(new House()
+                {
+                    Number = number,
+                    SubNumber = subNumber
+                });
+            }
+
+            return houses;
         }
 
         private string[] SplitToHouseGroups(string str)

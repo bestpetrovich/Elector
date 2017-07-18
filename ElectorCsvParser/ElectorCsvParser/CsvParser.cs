@@ -188,7 +188,7 @@ namespace ElectorCsvParser
             throw new Exception(string.Format("Не найден маркер адреса строка:{0}", addrStr));           
         }
 
-        private House ParseHouse(string addrStr)
+        public static House ParseHouse(string addrStr)
         {
             var house = new House();
             var houseMarkers = Markers.CreateHouseMarkers();
