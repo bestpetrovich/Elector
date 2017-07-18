@@ -1,6 +1,7 @@
 ﻿using ElectorDal;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,19 +12,80 @@ namespace ElectorCsvParser
     {
         static void Main(string[] args)
         {
-            //Area Parsing
-            var area1 = new AreaParser(1, "area_1.txt");
+            string city = "Москва";
 
+            //Area Parsing
+            //for(int i=0; i<4; i++)
+            //{
+            //    var area = new AreaParser(i+1, string.Format("area_{0}.txt", i+1));
+            //    UpdateArea(i+1, area.GetStreetHouses(), city);
+            //}
 
             //var csvFileName = "in.csv";
-            //string city = "Москва";
-
             //var parser = new CsvParser(csvFileName);
             //parser.Go(city);
-
             //UpdateProblems(city, parser.GetProblems());
+
+            //Select By area
+            var problems = GetAraeProblems().OrderBy(p=>p.AreaNumber).ToArray();
+            SaveToFile(problems, "out\\problem_area.csv");
         }
-      
+
+        private static void SaveToFile(ICollection<ProblemData> problems, string fileName)
+        {
+            var strBuilder = new StringBuilder();
+            char sep = ';';
+            foreach(var problem in problems)
+            {
+                strBuilder.Append(problem.Street.FullName); strBuilder.Append(sep);
+
+                if (problem.House != null)
+                    strBuilder.Append(problem.House.Number);
+
+                strBuilder.Append(sep);
+
+                if(problem.House != null)
+                    strBuilder.Append(problem.House.SubNumber);
+
+                strBuilder.Append(sep);
+
+
+            }
+
+            File.WriteAllText(fileName, strBuilder.ToString());
+;        }
+
+        private static void UpdateArea(int areaNumber, IReadOnlyDictionary<Street, List<House>> streetHouses, string city)
+        {
+            using (var context = new ElectorContext())
+            {
+                var dbAreaId = context.Areas.FirstOrDefault(a => a.City.Name == city && a.AreaNumber == areaNumber).id;
+                foreach (var street in streetHouses)
+                {
+                    var dbStreetId = AddOrUpdateStreet(city, street.Key, context);
+                    foreach(var house in street.Value)
+                    {
+                        var dbHouseId = AddOrUpdateHouse(dbStreetId, house, context);
+                        var dbStreetHouse = context.AreaStreetHouses.FirstOrDefault(h => h.idArea == dbAreaId &&
+                                                                                         h.idStreet == dbStreetId &&
+                                                                                         h.idHouse == dbHouseId);
+
+                        if (dbStreetHouse != null)
+                            continue;
+
+                        context.AreaStreetHouses.Add(new AreaStreetHouse()
+                        {
+                            idArea = dbAreaId,
+                            idStreet = dbStreetId,
+                            idHouse = dbHouseId
+                        });
+
+                        context.SaveChanges();
+                    }
+                }
+            }
+        }
+
         private static void UpdateProblems(string city, IReadOnlyList<Problem> problems)
         {
             using (var context = new ElectorContext())
@@ -68,7 +130,7 @@ namespace ElectorCsvParser
             }
         }
 
-        private static int? AddOrUpdateStreet(string city, Street street, ElectorContext context)
+        private static int AddOrUpdateStreet(string city, Street street, ElectorContext context)
         {
             var dbCity = context.Citys.FirstOrDefault(c => c.Name == city);
             if (dbCity == null)
@@ -126,5 +188,39 @@ namespace ElectorCsvParser
             return flat.id;
         }
 
+        private static ICollection<ProblemData> GetAraeProblems()
+        {
+            var problems = new List<ProblemData>();
+
+            using (var context = new ElectorContext())
+            {
+                foreach (var dbProblem in context.Problems.ToArray())
+                {
+                    var problem = new ProblemData()
+                    {
+                        id = dbProblem.id,
+                        FIO = dbProblem.FIO,
+                        Text = dbProblem.Text,
+                        House = dbProblem.House,
+                        Street = dbProblem.Street,
+                        Flat = dbProblem.Flat
+                    };
+
+                    try
+                    {
+                        var areaNumber = context.AreaStreetHouses.FirstOrDefault(a => a.idStreet == dbProblem.Street.id && a.idHouse == dbProblem.idHouse).Area.AreaNumber;
+                        problem.AreaNumber = areaNumber;
+                    }
+                    catch
+                    {
+                    }
+
+                    problems.Add(problem);
+                }
+
+            }
+
+            return problems;
+        }
     }
 }

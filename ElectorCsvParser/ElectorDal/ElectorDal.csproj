@@ -47,6 +47,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Area.cs" />
+    <Compile Include="AreaStreetHouse.cs" />
     <Compile Include="City.cs" />
     <Compile Include="ElectorContext.cs" />
     <Compile Include="Flat.cs" />

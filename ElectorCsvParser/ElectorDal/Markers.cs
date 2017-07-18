@@ -16,6 +16,9 @@ namespace ElectorDal
             markers.Add("пер.");
             markers.Add("б-р");
             markers.Add("пр-т");
+            markers.Add("пр-зд");
+            markers.Add("пр-кт");
+            markers.Add("пр-д");
 
             var outMarkers = new List<string>();
             foreach (var marker in markers)
@@ -31,6 +34,7 @@ namespace ElectorDal
             dic.Add("пр.", "просп.");
             dic.Add("просп.", "просп.");
             dic.Add("пр-т", "просп.");
+            dic.Add("пр-кт", "просп.");
 
             dic.Add("ул.", "ул.");
 
@@ -40,7 +44,14 @@ namespace ElectorDal
 
             dic.Add("пер.", "пер.");
 
-            return dic[marker.ToLower()];
+            dic.Add("пр-зд", "проезд");
+            dic.Add("пр-д", "проезд");
+
+            string key = marker.ToLower();
+            if(dic.ContainsKey(key))
+                return dic[key];
+
+            return string.Empty;
         }
 
         public static string[] CreateHouseMarkers()

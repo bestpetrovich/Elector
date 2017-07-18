@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="AreaParser.cs" />
     <Compile Include="CsvParser.cs" />
+    <Compile Include="Problemdata.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TextParser.cs" />

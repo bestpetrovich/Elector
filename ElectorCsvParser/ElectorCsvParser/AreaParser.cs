@@ -30,6 +30,11 @@ namespace ElectorCsvParser
             }
         }
 
+        public IReadOnlyDictionary<Street, List<House>> GetStreetHouses()
+        {
+            return _streetHouses;
+        }
+
         private Street GetStreet(string addrStr)
         {
             string[] markers = Markers.CreateStreetMarkers();
