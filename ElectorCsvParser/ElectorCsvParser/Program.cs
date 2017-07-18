@@ -11,13 +11,17 @@ namespace ElectorCsvParser
     {
         static void Main(string[] args)
         {
-            var csvFileName = "in.csv";
-            string city = "Москва";
+            //Area Parsing
+            var area1 = new AreaParser(1, "area_1.txt");
 
-            var parser = new CsvParser(csvFileName);
-            parser.Go(city);
 
-            UpdateProblems(city, parser.GetProblems());
+            //var csvFileName = "in.csv";
+            //string city = "Москва";
+
+            //var parser = new CsvParser(csvFileName);
+            //parser.Go(city);
+
+            //UpdateProblems(city, parser.GetProblems());
         }
       
         private static void UpdateProblems(string city, IReadOnlyList<Problem> problems)

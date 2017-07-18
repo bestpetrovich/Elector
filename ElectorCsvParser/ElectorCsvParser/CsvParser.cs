@@ -10,8 +10,8 @@ namespace ElectorCsvParser
     internal class CsvParser
     {
         private string[] csvFileData;
-        private char[] digits = new[] { '0', '1', '2', '3', '4','5', '6', '7', '8', '9' };
-        private char[] trimChars = new[] { ' ', ',', '.' };
+        private static char[] digits = new[] { '0', '1', '2', '3', '4','5', '6', '7', '8', '9' };
+        public static char[] TrimChars = new[] { ' ', ',', '.' };
         private Dictionary<Street, List<House>> _houses = new Dictionary<Street, List<House>>();
         private List<Problem> _problems = new List<Problem>();
 
@@ -144,12 +144,12 @@ namespace ElectorCsvParser
             if (cityPos < 0)
                 return null;
 
-            return str.Substring(cityPos + city.Length).Trim(trimChars).ToUpper();
+            return str.Substring(cityPos + city.Length).Trim(TrimChars).ToUpper();
         }
 
-        private Street ParseStreet(string addrStr)
+        public static Street ParseStreet(string addrStr)
         {           
-            string[] markers = CreateStreetMarkers();
+            string[] markers = Markers.CreateStreetMarkers();
             foreach(var marker in markers)
             {
                 var markerPos = addrStr.IndexOf(marker);
@@ -159,14 +159,14 @@ namespace ElectorCsvParser
                 string shortName = string.Empty;
                 if (markerPos == 0) //Не нашли маркер улицы
                 {
-                    var houseMarkers = CreateHouseMarkers();
+                    var houseMarkers = Markers.CreateHouseMarkers();
                     foreach (var house in houseMarkers) //Пробуем поиск по маркеру дома
                     {
                         var houseIndex = addrStr.IndexOf(house);
                         if (houseIndex < 0)
                             continue;
 
-                        shortName = addrStr.Substring(markerPos + marker.Length, houseIndex - marker.Length).Trim(trimChars);
+                        shortName = addrStr.Substring(markerPos + marker.Length, houseIndex - marker.Length).Trim(TrimChars);
                         return new Street(shortName, marker);
                     }
 
@@ -174,7 +174,7 @@ namespace ElectorCsvParser
                 }
                 else
                 {
-                    shortName = addrStr.Substring(0, markerPos).Trim(trimChars);
+                    shortName = addrStr.Substring(0, markerPos).Trim(TrimChars);
                     return new Street(shortName, marker);
                 }
             }
@@ -182,7 +182,7 @@ namespace ElectorCsvParser
             var digitPos = addrStr.IndexOfAny(digits);
             if(digitPos > 0)
             {
-                return new Street(addrStr.Substring(0, digitPos).Trim(trimChars), " ");
+                return new Street(addrStr.Substring(0, digitPos).Trim(TrimChars), " ");
             }
 
             throw new Exception(string.Format("Не найден маркер адреса строка:{0}", addrStr));           
@@ -191,7 +191,7 @@ namespace ElectorCsvParser
         private House ParseHouse(string addrStr)
         {
             var house = new House();
-            var houseMarkers = CreateHouseMarkers();
+            var houseMarkers = Markers.CreateHouseMarkers();
             foreach (var marker in houseMarkers) //Пробуем поиск по маркеру дома
             {
                 var index = addrStr.IndexOf(marker);
@@ -212,7 +212,7 @@ namespace ElectorCsvParser
             if (string.IsNullOrEmpty(house.Number))
                 return null;
 
-            var subHouseMarkers = CreateSubHouseMarkers();
+            var subHouseMarkers = Markers.CreateSubHouseMarkers();
             foreach (var marker in subHouseMarkers) //Пробуем поиск по маркеру корпуса
             {
                 var index = addrStr.IndexOf(marker);
@@ -229,7 +229,7 @@ namespace ElectorCsvParser
         private Flat ParseFlat(string addrStr)
         {
             var flat = new Flat();
-            var flatMarkers = CreateFlatMarkers();
+            var flatMarkers = Markers.CreateFlatMarkers();
             foreach (var marker in flatMarkers) //Пробуем поиск по маркеру дома
             {
                 var index = addrStr.IndexOf(marker);
@@ -245,68 +245,6 @@ namespace ElectorCsvParser
                 return null;
 
             return flat;
-        }
-
-        private string[] CreateStreetMarkers()
-        {
-            var markers = new List<string>();
-
-            markers.Add("пр.");
-            markers.Add("просп.");
-            markers.Add("ул.");
-            markers.Add("бульв.");
-            markers.Add("бульвар");
-            markers.Add("пер.");
-
-            var outMarkers = new List<string>();
-            foreach (var marker in markers)            
-                outMarkers.Add( marker.ToUpper());                            
-
-            return outMarkers.ToArray();
-        }
-
-        private string[] CreateHouseMarkers()
-        {
-            var markers = new List<string>();
-
-            markers.Add("д.");
-            markers.Add("дом");
-            markers.Add("КВАРТ.");
-
-            var outMarkers = new List<string>();
-            foreach (var marker in markers)            
-                outMarkers.Add(marker.ToUpper());            
-
-            return outMarkers.ToArray();
-        }
-
-        private string[] CreateSubHouseMarkers()
-        {
-            var markers = new List<string>();
-
-            markers.Add("корп.");
-            markers.Add("корпус");
-            markers.Add("к.");
-
-            var outMarkers = new List<string>();
-            foreach (var marker in markers)
-                outMarkers.Add(marker.ToUpper());
-
-            return outMarkers.ToArray();
-        }
-
-        private string[] CreateFlatMarkers()
-        {
-            var markers = new List<string>();
-
-            markers.Add("кв.");
-            markers.Add("квартира");
-
-            var outMarkers = new List<string>();
-            foreach (var marker in markers)
-                outMarkers.Add(marker.ToUpper());
-
-            return outMarkers.ToArray();
         }
     }
 }
