@@ -10,6 +10,8 @@ namespace ElectorDal
     [Table("Street")]
     public class Street
     {
+        private string _revertName;
+
         public int id { get; set; }
         public string FullName { get; set; }
 
@@ -25,8 +27,24 @@ namespace ElectorDal
             var decodedMarker = Markers.DecodeMarker(marker);
 
             FullName = string.Format("{0} {1}", shortName.ToUpper(), decodedMarker.ToUpper());
+
+            CreateReverName(shortName.ToUpper(), decodedMarker.ToUpper());
         }
 
+        private void CreateReverName(string shortName, string marker)
+        {
+            var words = TextParser.GetWords(shortName);
+            string name;
+            if (words.Length < 2)
+                name = shortName;
+            else
+                name = string.Join(" ", words.Reverse());
+
+            _revertName = string.Format("{0} {1}", name.ToUpper(), marker.ToUpper());
+        }
+
+        [NotMapped]
+        public string GetRevertName { get { return _revertName;  } }
 
         public override bool Equals(object obj)
         {
@@ -58,5 +76,7 @@ namespace ElectorDal
 
             return hash;
         }
+
+
     }
 }

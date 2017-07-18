@@ -57,6 +57,7 @@
     <Compile Include="Problem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Street.cs" />
+    <Compile Include="TextParser.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

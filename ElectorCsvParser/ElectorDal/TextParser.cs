@@ -2,18 +2,18 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace ElectorCsvParser
+namespace ElectorDal
 {
-    internal static class TextParser
+    public static class TextParser
     {
-        internal static string GetNextWord(string str, int markerIndex, string marker)
+        public static string GetNextWord(string str, int markerIndex, string marker)
         {
             var text = str.Substring(markerIndex+marker.Length);
             var words = GetWords(text);
             return words[0];
         }
 
-        static string[] GetWords(string input)
+        internal static string[] GetWords(string input)
         {
             MatchCollection matches = Regex.Matches(input, @"\b[\w/\w//]*\b");
 

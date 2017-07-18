@@ -15,21 +15,21 @@ namespace ElectorCsvParser
             string city = "Москва";
 
             //Area Parsing
-            //for(int i=0; i<4; i++)
-            //{
-            //    var area = new AreaParser(i+1, string.Format("area_{0}.txt", i+1));
-            //    UpdateArea(i+1, area.GetStreetHouses(), city);
-            //}
+            for (int i = 0; i < 4; i++)
+            {
+                var area = new AreaParser(i + 1, string.Format("area_{0}.txt", i + 1));
+                UpdateArea(i + 1, area.GetStreetHouses(), city);
+            }
 
-            //var csvFileName = "in.csv";
-            //var parser = new CsvParser(csvFileName);
-            //parser.Go(city);
-            //UpdateProblems(city, parser.GetProblems());
+            var csvFileName = "in.csv";
+            var parser = new CsvParser(csvFileName);
+            parser.Go(city);
+            UpdateProblems(city, parser.GetProblems());
 
             //Select By area
-            var problems = GetAraeProblems().GroupBy(p=>p.AreaNumber);
-            foreach(var areaProblems in problems)
-                SaveToFile(areaProblems.OrderBy(p=>p.idHouse).ToList(), string.Format("out\\problem_area_{0}.csv", areaProblems.Key));
+            var problems = GetAraeProblems().GroupBy(p => p.AreaNumber);
+            foreach (var areaProblems in problems)
+                SaveToFile(areaProblems.OrderBy(p => p.idHouse).ToList(), string.Format("out\\problem_area_{0}.csv", areaProblems.Key));
         }
 
         private static void SaveToFile(ICollection<ProblemData> problems, string fileName)
@@ -148,9 +148,16 @@ namespace ElectorCsvParser
             }
 
 
-            var dbStreet = context.Streets.FirstOrDefault(s =>
+            Street dbStreet = context.Streets.FirstOrDefault(s =>
                                     s.idCity == dbCity.id &&
                                     s.FullName == street.FullName);
+
+            if (dbStreet != null)
+                return dbStreet.id;
+
+            dbStreet = context.Streets.FirstOrDefault(s =>
+                                    s.idCity == dbCity.id &&
+                                    s.FullName == street.GetRevertName);
 
             if (dbStreet != null)
                 return dbStreet.id;
