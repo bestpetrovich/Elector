@@ -15,5 +15,6 @@ namespace ElectorCsvParser
         public Street Street { get; set; }
         public Flat Flat { get; set; }
         public int AreaNumber { get; set; }
+        public int? idHouse { get; set; }
     }
 }

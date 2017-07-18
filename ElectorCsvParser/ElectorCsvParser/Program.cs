@@ -27,8 +27,9 @@ namespace ElectorCsvParser
             //UpdateProblems(city, parser.GetProblems());
 
             //Select By area
-            var problems = GetAraeProblems().OrderBy(p=>p.AreaNumber).ToArray();
-            SaveToFile(problems, "out\\problem_area.csv");
+            var problems = GetAraeProblems().GroupBy(p=>p.AreaNumber);
+            foreach(var areaProblems in problems)
+                SaveToFile(areaProblems.OrderBy(p=>p.idHouse).ToList(), string.Format("out\\problem_area_{0}.csv", areaProblems.Key));
         }
 
         private static void SaveToFile(ICollection<ProblemData> problems, string fileName)
@@ -37,7 +38,10 @@ namespace ElectorCsvParser
             char sep = ';';
             foreach(var problem in problems)
             {
-                strBuilder.Append(problem.Street.FullName); strBuilder.Append(sep);
+                if (problem.Street != null)
+                    strBuilder.Append(problem.Street.FullName);
+
+                strBuilder.Append(sep);
 
                 if (problem.House != null)
                     strBuilder.Append(problem.House.Number);
@@ -49,10 +53,13 @@ namespace ElectorCsvParser
 
                 strBuilder.Append(sep);
 
+                strBuilder.Append(problem.FIO); strBuilder.Append(sep);
+                strBuilder.Append(problem.Text); strBuilder.Append(sep);
 
+                strBuilder.AppendLine();
             }
 
-            File.WriteAllText(fileName, strBuilder.ToString());
+            File.WriteAllText(fileName, strBuilder.ToString(), Encoding.Unicode);
 ;        }
 
         private static void UpdateArea(int areaNumber, IReadOnlyDictionary<Street, List<House>> streetHouses, string city)
@@ -203,7 +210,8 @@ namespace ElectorCsvParser
                         Text = dbProblem.Text,
                         House = dbProblem.House,
                         Street = dbProblem.Street,
-                        Flat = dbProblem.Flat
+                        Flat = dbProblem.Flat,
+                        idHouse = dbProblem.idHouse
                     };
 
                     try
