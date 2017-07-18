@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace ElectorCsvParser
 {
@@ -23,6 +24,9 @@ namespace ElectorCsvParser
                 var street = GetStreet(addrStr);
                 if (!_streetHouses.ContainsKey(street))
                     _streetHouses.Add(street, new List<House>());
+
+                var houses = GetHouses(str.Substring(indx + 1));
+                _streetHouses[street].AddRange(houses);
             }
         }
 
@@ -50,6 +54,58 @@ namespace ElectorCsvParser
             }
 
             throw new Exception(string.Format("Cant parse Street: {0}", addrStr));
+        }
+
+        private List<House> GetHouses(string str)
+        {
+            string[] houseGroups = SplitToHouseGroups(str);
+
+            return new List<House>();
+        }
+
+        private string[] SplitToHouseGroups(string str)
+        {
+            var houseGroups = new List<string>();
+
+
+            bool gotLeftBracket = false;
+            bool gotRightBracket = false;
+            var groupStr = new StringBuilder();
+            for (int i=0; i<str.Length; i++)
+            {
+                if (str[i] == '(')
+                {
+                    gotLeftBracket = true;
+                    groupStr.Append(str[i]);
+                }
+                else
+                if (str[i] == ')')
+                {
+                    gotRightBracket = true;
+                    groupStr.Append(str[i]);
+                }
+                else if (str[i] == ',')
+                {
+                    if (!gotLeftBracket || (gotLeftBracket && gotRightBracket))
+                    {
+                        houseGroups.Add(groupStr.ToString());
+                        groupStr.Clear();
+                        gotLeftBracket = false;
+                        gotRightBracket = false;
+                    }
+                    else
+                        groupStr.Append(str[i]);
+                }
+                else
+                {
+                    groupStr.Append(str[i]);
+                }
+
+                if (i == str.Length - 1)
+                    houseGroups.Add(groupStr.ToString());
+            }
+
+            return houseGroups.ToArray();
         }
     }
 }
