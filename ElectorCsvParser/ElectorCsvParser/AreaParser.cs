@@ -81,12 +81,13 @@ namespace ElectorCsvParser
             if (leftBracket < 0)
                 return new List<House>() { CsvParser.ParseHouse(houseStr) };
 
-            var number = houseStr.Substring(0, leftBracket).Trim();
-
+            var number = houseStr.Substring(0, leftBracket).Trim();            
             var subNumberStr = houseStr.Substring(leftBracket + 1, rightBracket - leftBracket-1);
             var items = subNumberStr.Split(',');
-            var houses = new List<House>();
             var markers = Markers.CreateSubHouseMarkers();
+
+            var houses = new List<House>();
+            houses.Add(new House() { Number = number });            
             foreach (var str in items)
             {
                 var subNumber = str.ToUpper().Trim();
